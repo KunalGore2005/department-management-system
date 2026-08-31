@@ -2,6 +2,11 @@ const pool = require("../config/db");
 const bcrypt = require("bcrypt");
 const defaultPasswords = require("../utils/defaultPasswords");
 
+
+// =====================================================
+// Create User
+// =====================================================
+
 const createUser = async (loggedInUser, userData) => {
 
     const connection = await pool.getConnection();
@@ -18,11 +23,12 @@ const createUser = async (loggedInUser, userData) => {
 
             enrollment_number,
             section_id,
-            admission_year,
+            batch_id,
 
             designation,
             joining_date
         } = userData;
+
 
         // =============================
         // Required fields
@@ -30,9 +36,12 @@ const createUser = async (loggedInUser, userData) => {
 
         if (!role || !email || !name) {
 
-            throw new Error("Role, email and name are required.");
+            throw new Error(
+                "Role, email and name are required."
+            );
 
         }
+
 
         // =============================
         // Valid role
@@ -43,6 +52,7 @@ const createUser = async (loggedInUser, userData) => {
             throw new Error("Invalid role.");
 
         }
+
 
         // =============================
         // Permission Check
@@ -59,6 +69,7 @@ const createUser = async (loggedInUser, userData) => {
 
         }
 
+
         // =============================
         // Student validation
         // =============================
@@ -68,16 +79,17 @@ const createUser = async (loggedInUser, userData) => {
             if (
                 !enrollment_number ||
                 !section_id ||
-                !admission_year
+                !batch_id
             ) {
 
                 throw new Error(
-                    "Enrollment number, section and admission year are required."
+                    "Enrollment number, section and batch are required."
                 );
 
             }
 
         }
+
 
         // =============================
         // Faculty validation
@@ -94,6 +106,7 @@ const createUser = async (loggedInUser, userData) => {
             }
 
         }
+
 
         // =============================
         // Duplicate Email
@@ -115,6 +128,7 @@ const createUser = async (loggedInUser, userData) => {
             );
 
         }
+
 
         // =============================
         // Duplicate Enrollment
@@ -141,6 +155,7 @@ const createUser = async (loggedInUser, userData) => {
 
         }
 
+
         // =============================
         // Check Section
         // =============================
@@ -166,6 +181,33 @@ const createUser = async (loggedInUser, userData) => {
 
         }
 
+
+        // =============================
+        // Check Batch
+        // =============================
+
+        if (role === "STUDENT") {
+
+            const [batch] = await connection.query(
+                `
+                SELECT batch_id
+                FROM batches
+                WHERE batch_id = ?
+                `,
+                [batch_id]
+            );
+
+            if (batch.length === 0) {
+
+                throw new Error(
+                    "Invalid batch."
+                );
+
+            }
+
+        }
+
+
         // =============================
         // Default Password
         // =============================
@@ -182,10 +224,12 @@ const createUser = async (loggedInUser, userData) => {
 
         }
 
+
         const passwordHash = await bcrypt.hash(
             password,
             10
         );
+
 
         // =============================
         // Insert User
@@ -209,7 +253,10 @@ const createUser = async (loggedInUser, userData) => {
             ]
         );
 
+
         const userId = userResult.insertId;
+
+
         // =============================
         // Insert Student
         // =============================
@@ -225,7 +272,7 @@ const createUser = async (loggedInUser, userData) => {
                     name,
                     phone,
                     section_id,
-                    admission_year
+                    batch_id
                 )
                 VALUES
                 (?, ?, ?, ?, ?, ?)
@@ -236,11 +283,12 @@ const createUser = async (loggedInUser, userData) => {
                     name,
                     phone || null,
                     section_id,
-                    admission_year
+                    batch_id
                 ]
             );
 
         }
+
 
         // =============================
         // Insert Faculty
@@ -272,7 +320,9 @@ const createUser = async (loggedInUser, userData) => {
 
         }
 
+
         await connection.commit();
+
 
         return {
             success: true,
@@ -294,11 +344,20 @@ const createUser = async (loggedInUser, userData) => {
 
 };
 
+
+// =====================================================
+// Get All Users
+// =====================================================
+
 const getAllUsers = async (query) => {
 
     try {
 
-        const { role, is_active } = query;
+        const {
+            role,
+            is_active
+        } = query;
+
 
         let sql = `
             SELECT
@@ -311,12 +370,17 @@ const getAllUsers = async (query) => {
                 s.phone,
                 s.enrollment_number,
                 s.section_id,
+                s.batch_id,
                 NULL AS designation
+
             FROM users u
+
             JOIN students s
                 ON u.user_id = s.user_id
 
+
             UNION ALL
+
 
             SELECT
                 u.user_id,
@@ -328,24 +392,50 @@ const getAllUsers = async (query) => {
                 f.phone,
                 NULL,
                 NULL,
+                NULL,
                 f.designation
+
             FROM users u
+
             JOIN faculty f
                 ON u.user_id = f.user_id
         `;
 
+
         const conditions = [];
         const values = [];
 
+
+        // =============================
+        // Filter by Role
+        // =============================
+
         if (role) {
+
             conditions.push("role = ?");
             values.push(role);
+
         }
 
+
+        // =============================
+        // Filter by Active Status
+        // =============================
+
         if (is_active !== undefined) {
+
             conditions.push("is_active = ?");
-            values.push(is_active === "true");
+
+            values.push(
+                is_active === "true"
+            );
+
         }
+
+
+        // =============================
+        // Apply Filters
+        // =============================
 
         if (conditions.length > 0) {
 
@@ -370,7 +460,12 @@ const getAllUsers = async (query) => {
 
         }
 
-        const [users] = await pool.query(sql, values);
+
+        const [users] = await pool.query(
+            sql,
+            values
+        );
+
 
         return users;
 
@@ -382,9 +477,18 @@ const getAllUsers = async (query) => {
 
 };
 
+
+// =====================================================
+// Get User By ID
+// =====================================================
+
 const getUserById = async (id) => {
 
     try {
+
+        // =============================
+        // Check Student
+        // =============================
 
         const [student] = await pool.query(
             `
@@ -402,23 +506,34 @@ const getUserById = async (id) => {
                 s.phone,
                 s.enrollment_number,
                 s.section_id,
-                s.admission_year
+                s.batch_id,
+
+                b.admission_year
 
             FROM users u
 
             JOIN students s
                 ON u.user_id = s.user_id
 
+            JOIN batches b
+                ON s.batch_id = b.batch_id
+
             WHERE u.user_id = ?
             `,
             [id]
         );
+
 
         if (student.length > 0) {
 
             return student[0];
 
         }
+
+
+        // =============================
+        // Check Faculty / HOD
+        // =============================
 
         const [faculty] = await pool.query(
             `
@@ -447,34 +562,17 @@ const getUserById = async (id) => {
             [id]
         );
 
+
         if (faculty.length > 0) {
 
             return faculty[0];
 
         }
 
-        const [hod] = await pool.query(
-            `
-            SELECT
-                user_id,
-                email,
-                role,
-                is_active,
-                is_first_login,
-                last_login,
-                created_at
-            FROM users
-            WHERE user_id = ?
-            AND role = 'HOD'
-            `,
-            [id]
-        );
 
-        if (hod.length > 0) {
-
-            return hod[0];
-
-        }
+        // =============================
+        // User Not Found
+        // =============================
 
         throw new Error("User not found.");
 
@@ -486,6 +584,11 @@ const getUserById = async (id) => {
 
 };
 
+
+// =====================================================
+// Update User
+// =====================================================
+
 const updateUser = async (userId, userData) => {
 
     const connection = await pool.getConnection();
@@ -494,15 +597,17 @@ const updateUser = async (userId, userData) => {
 
         await connection.beginTransaction();
 
+
         const {
             email,
             name,
             phone,
             section_id,
-            admission_year,
+            batch_id,
             designation,
             joining_date
         } = userData;
+
 
         // =============================
         // Check User Exists
@@ -517,13 +622,18 @@ const updateUser = async (userId, userData) => {
             [userId]
         );
 
+
         if (users.length === 0) {
 
-            throw new Error("User not found.");
+            throw new Error(
+                "User not found."
+            );
 
         }
 
+
         const user = users[0];
+
 
         // =============================
         // Check Duplicate Email
@@ -531,23 +641,31 @@ const updateUser = async (userId, userData) => {
 
         if (email) {
 
-            const [existingEmail] = await connection.query(
-                `
-                SELECT user_id
-                FROM users
-                WHERE email = ?
-                AND user_id <> ?
-                `,
-                [email, userId]
-            );
+            const [existingEmail] =
+                await connection.query(
+                    `
+                    SELECT user_id
+                    FROM users
+                    WHERE email = ?
+                    AND user_id <> ?
+                    `,
+                    [
+                        email,
+                        userId
+                    ]
+                );
+
 
             if (existingEmail.length > 0) {
 
-                throw new Error("Email already exists.");
+                throw new Error(
+                    "Email already exists."
+                );
 
             }
 
         }
+
 
         // =============================
         // Student Validation
@@ -557,25 +675,55 @@ const updateUser = async (userId, userData) => {
 
             if (section_id) {
 
-                const [section] = await connection.query(
-                    `
-                    SELECT section_id
-                    FROM sections
-                    WHERE section_id = ?
-                    `,
-                    [section_id]
-                );
+                const [section] =
+                    await connection.query(
+                        `
+                        SELECT section_id
+                        FROM sections
+                        WHERE section_id = ?
+                        `,
+                        [section_id]
+                    );
+
 
                 if (section.length === 0) {
 
-                    throw new Error("Invalid section.");
+                    throw new Error(
+                        "Invalid section."
+                    );
+
+                }
+
+            }
+
+
+            if (batch_id) {
+
+                const [batch] =
+                    await connection.query(
+                        `
+                        SELECT batch_id
+                        FROM batches
+                        WHERE batch_id = ?
+                        `,
+                        [batch_id]
+                    );
+
+
+                if (batch.length === 0) {
+
+                    throw new Error(
+                        "Invalid batch."
+                    );
 
                 }
 
             }
 
         }
-                // =============================
+
+
+        // =============================
         // Update users table
         // =============================
 
@@ -587,10 +735,14 @@ const updateUser = async (userId, userData) => {
                 SET email = ?
                 WHERE user_id = ?
                 `,
-                [email, userId]
+                [
+                    email,
+                    userId
+                ]
             );
 
         }
+
 
         // =============================
         // Update Student
@@ -605,25 +757,30 @@ const updateUser = async (userId, userData) => {
                     name = COALESCE(?, name),
                     phone = COALESCE(?, phone),
                     section_id = COALESCE(?, section_id),
-                    admission_year = COALESCE(?, admission_year)
+                    batch_id = COALESCE(?, batch_id)
+
                 WHERE user_id = ?
                 `,
                 [
                     name,
                     phone,
                     section_id,
-                    admission_year,
+                    batch_id,
                     userId
                 ]
             );
 
         }
 
+
         // =============================
-        // Update Faculty
+        // Update Faculty / HOD
         // =============================
 
-        if (user.role === "FACULTY") {
+        if (
+            user.role === "FACULTY" ||
+            user.role === "HOD"
+        ) {
 
             await connection.query(
                 `
@@ -633,6 +790,7 @@ const updateUser = async (userId, userData) => {
                     phone = COALESCE(?, phone),
                     designation = COALESCE(?, designation),
                     joining_date = COALESCE(?, joining_date)
+
                 WHERE user_id = ?
                 `,
                 [
@@ -646,7 +804,9 @@ const updateUser = async (userId, userData) => {
 
         }
 
+
         await connection.commit();
+
 
         return {
             success: true,
@@ -656,6 +816,7 @@ const updateUser = async (userId, userData) => {
     } catch (error) {
 
         await connection.rollback();
+
         throw error;
 
     } finally {
@@ -666,13 +827,27 @@ const updateUser = async (userId, userData) => {
 
 };
 
-const updateUserStatus = async (userId, loggedInUserId, isActive) => {
+
+// =====================================================
+// Update User Status
+// =====================================================
+
+const updateUserStatus = async (
+    userId,
+    loggedInUserId,
+    isActive
+) => {
 
     try {
 
         if (typeof isActive !== "boolean") {
-            throw new Error("is_active must be true or false.");
+
+            throw new Error(
+                "is_active must be true or false."
+            );
+
         }
+
 
         const [users] = await pool.query(
             `
@@ -683,14 +858,31 @@ const updateUserStatus = async (userId, loggedInUserId, isActive) => {
             [userId]
         );
 
+
         if (users.length === 0) {
-            throw new Error("User not found.");
+
+            throw new Error(
+                "User not found."
+            );
+
         }
 
-        // Prevent self deactivation
-        if (Number(userId) === Number(loggedInUserId)) {
-            throw new Error("You cannot deactivate your own account.");
+
+        // =============================
+        // Prevent Self Deactivation
+        // =============================
+
+        if (
+            Number(userId) ===
+            Number(loggedInUserId)
+        ) {
+
+            throw new Error(
+                "You cannot deactivate your own account."
+            );
+
         }
+
 
         await pool.query(
             `
@@ -704,9 +896,15 @@ const updateUserStatus = async (userId, loggedInUserId, isActive) => {
             ]
         );
 
+
         return {
             success: true,
-            message: `User has been ${isActive ? "activated" : "deactivated"} successfully.`
+            message:
+                `User has been ${
+                    isActive
+                        ? "activated"
+                        : "deactivated"
+                } successfully.`
         };
 
     } catch (error) {
@@ -716,6 +914,7 @@ const updateUserStatus = async (userId, loggedInUserId, isActive) => {
     }
 
 };
+
 
 module.exports = {
     createUser,
