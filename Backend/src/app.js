@@ -8,6 +8,8 @@ const coordinatorsRoutes = require("./routes/coordinators.routes");
 const attendanceRoutes = require("./routes/attendance.routes");
 const marksRoutes = require("./routes/marks.routes");
 const noticesRoutes = require("./routes/notices.routes");
+const profileRoutes = require("./routes/profile.routes");
+const dashboardRoutes = require("./routes/dashboard.routes");
 
 const { startCleanupJob } = require("./services/cleanup.service");
 
@@ -23,6 +25,8 @@ app.use('/api/coordinators', coordinatorsRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/marks', marksRoutes);
 app.use('/api/notices', noticesRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 startCleanupJob();
 
 module.exports = app;
