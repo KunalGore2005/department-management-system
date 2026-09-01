@@ -1,9 +1,7 @@
 const usersService = require("../services/users.service");
 
 const createUser = async (req, res) => {
-
     try {
-
         const result = await usersService.createUser(
             req.user,
             req.body
@@ -12,16 +10,13 @@ const createUser = async (req, res) => {
         return res.status(201).json(result);
 
     } catch (error) {
-
         console.error(error);
 
         return res.status(400).json({
             success: false,
             message: error.message
         });
-
     }
-
 };
 
 const getAllUsers = async (req, res) => {
@@ -83,6 +78,7 @@ const updateUser = async (req, res) => {
 
         const result = await usersService.updateUser(
             id,
+            req.user,
             req.body
         );
 
@@ -112,6 +108,7 @@ const updateUserStatus = async (req, res) => {
         const result = await usersService.updateUserStatus(
             id,
             req.user.userId,
+            req.user.role,
             is_active
         );
 

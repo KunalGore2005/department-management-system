@@ -589,7 +589,7 @@ const getUserById = async (id) => {
 // Update User
 // =====================================================
 
-const updateUser = async (userId, userData) => {
+const updateUser = async (userId, loggedInUser, userData) => {
 
     const connection = await pool.getConnection();
 
@@ -634,7 +634,14 @@ const updateUser = async (userId, userData) => {
 
         const user = users[0];
 
-
+        if (
+            loggedInUser.role === "FACULTY" &&
+            user.role !== "STUDENT"
+        ) {
+            throw new Error(
+                "Faculty can only update student accounts."
+            );
+        }
         // =============================
         // Check Duplicate Email
         // =============================
@@ -835,6 +842,7 @@ const updateUser = async (userId, userData) => {
 const updateUserStatus = async (
     userId,
     loggedInUserId,
+    loggedInUserRole,
     isActive
 ) => {
 
@@ -860,11 +868,18 @@ const updateUserStatus = async (
 
 
         if (users.length === 0) {
+            throw new Error("User not found.");
+        }
 
+        const targetUser = users[0];
+
+        if (
+            loggedInUserRole === "FACULTY" &&
+            targetUser.role !== "STUDENT"
+        ) {
             throw new Error(
-                "User not found."
+                "Faculty can only change student account status."
             );
-
         }
 
 
