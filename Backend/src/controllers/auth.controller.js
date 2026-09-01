@@ -18,8 +18,7 @@ const loginUser = async (req, res) => {
 
         if (users.length === 0) {
             return res.status(401).json({
-                message: "Invalid email or password",
-                users: users
+                message: "Invalid email or password"
             });
         }
 
@@ -40,8 +39,7 @@ const loginUser = async (req, res) => {
 
         if (!isPasswordValid) {
             return res.status(401).json({
-                message: "Invalid email or password",
-                users: users
+                message: "Invalid email or password"
             });
         }
 
@@ -216,6 +214,24 @@ const confirmPasswordReset = async (req, res) => {
         await connection.beginTransaction();
 
         const { newPassword } = req.body;
+
+        if (!newPassword) {
+            await connection.rollback();
+            connection.release();
+
+            return res.status(400).json({
+                message: "New password is required."
+            });
+        }
+
+        if (newPassword.length < 8) {
+            await connection.rollback();
+            connection.release();
+
+            return res.status(400).json({
+                message: "Password must be at least 8 characters long."
+            });
+        }
 
         const { userId, otpId } = req.resetData;
 
