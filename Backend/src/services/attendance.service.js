@@ -13,44 +13,74 @@ const startAttendanceSession = async (user, data) => {
         sections
     } = data;
 
-    if (!subjectId) {
+    // =====================================================
+    // Validate Input
+    // =====================================================
+
+    if (!Number.isInteger(Number(subjectId)) || Number(subjectId) <= 0) {
         return {
             status: 400,
             success: false,
-            message: "Subject is required."
+            message: "Invalid subject ID."
         };
     }
 
-    if (!sessionType) {
+    if (!["THEORY", "LAB"].includes(sessionType)) {
         return {
             status: 400,
             success: false,
-            message: "Session type is required."
+            message: "Invalid session type."
         };
     }
 
-    if (!presentStrength) {
+    if (
+        !Number.isInteger(Number(presentStrength)) ||
+        Number(presentStrength) <= 0
+    ) {
         return {
             status: 400,
             success: false,
-            message: "Present strength is required."
+            message: "Present strength must be a positive integer."
         };
     }
 
-    if (!durationMinutes) {
+    if (
+        !Number.isInteger(Number(durationMinutes)) ||
+        Number(durationMinutes) <= 0
+    ) {
         return {
             status: 400,
             success: false,
-            message: "Duration is required."
+            message: "Duration must be a positive integer."
         };
     }
 
-    if (!sections || sections.length === 0) {
+    if (!Array.isArray(sections) || sections.length === 0) {
         return {
             status: 400,
             success: false,
             message: "Please select at least one section."
         };
+    }
+
+    // =====================================================
+    // Validate Sections
+    // =====================================================
+
+    for (const item of sections) {
+
+        if (
+            !Number.isInteger(Number(item.sectionId)) ||
+            Number(item.sectionId) <= 0 ||
+            !Number.isInteger(Number(item.batchId)) ||
+            Number(item.batchId) <= 0
+        ) {
+            return {
+                status: 400,
+                success: false,
+                message: "Invalid section or batch ID."
+            };
+        }
     }
 
     const connection = await db.getConnection();
@@ -84,6 +114,77 @@ const startAttendanceSession = async (user, data) => {
         }
 
         const facultyId = faculty[0].faculty_id;
+
+        // =====================================================
+        // Verify Subject Exists
+        // =====================================================
+
+        const [subject] = await connection.query(
+            `
+            SELECT subject_id
+            FROM subjects
+            WHERE subject_id = ?
+            `,
+            [subjectId]
+        );
+
+        if (subject.length === 0) {
+
+            await connection.rollback();
+
+            return {
+                status: 404,
+                success: false,
+                message: "Subject not found."
+            };
+        }
+
+        // =====================================================
+        // Verify Sections & Batches
+        // =====================================================
+
+        for (const item of sections) {
+
+            const [section] = await connection.query(
+                `
+                SELECT section_id
+                FROM sections
+                WHERE section_id = ?
+                `,
+                [item.sectionId]
+            );
+
+            if (section.length === 0) {
+
+                await connection.rollback();
+
+                return {
+                    status: 404,
+                    success: false,
+                    message: `Section ${item.sectionId} not found.`
+                };
+            }
+
+            const [batch] = await connection.query(
+                `
+                SELECT batch_id
+                FROM batches
+                WHERE batch_id = ?
+                `,
+                [item.batchId]
+            );
+
+            if (batch.length === 0) {
+
+                await connection.rollback();
+
+                return {
+                    status: 404,
+                    success: false,
+                    message: `Batch ${item.batchId} not found.`
+                };
+            }
+        }
 
         // =====================================================
         // Verify Allocation (Faculty Only)
@@ -121,9 +222,7 @@ const startAttendanceSession = async (user, data) => {
                             "You are not assigned to one or more selected sections."
                     };
                 }
-
             }
-
         }
 
         // =====================================================
@@ -165,23 +264,23 @@ const startAttendanceSession = async (user, data) => {
 
         const [session] = await connection.query(
             `
-    INSERT INTO attendance_sessions
-    (
-        subject_id,
-        faculty_id,
-        session_code,
-        present_strength,
-        session_type,
-        start_time,
-        end_time
-    )
-    VALUES
-    (
-        ?, ?, ?, ?, ?,
-        NOW(),
-        DATE_ADD(NOW(), INTERVAL ? MINUTE)
-    )
-    `,
+            INSERT INTO attendance_sessions
+            (
+                subject_id,
+                faculty_id,
+                session_code,
+                present_strength,
+                session_type,
+                start_time,
+                end_time
+            )
+            VALUES
+            (
+                ?, ?, ?, ?, ?,
+                NOW(),
+                DATE_ADD(NOW(), INTERVAL ? MINUTE)
+            )
+            `,
             [
                 subjectId,
                 facultyId,
@@ -216,7 +315,6 @@ const startAttendanceSession = async (user, data) => {
                     item.batchId
                 ]
             );
-
         }
 
         await connection.commit();
@@ -232,7 +330,9 @@ const startAttendanceSession = async (user, data) => {
                 presentStrength,
                 durationMinutes,
                 startTime: new Date(),
-                endTime: new Date(Date.now() + durationMinutes * 60000)
+                endTime: new Date(
+                    Date.now() + Number(durationMinutes) * 60000
+                )
             }
         };
 
@@ -246,7 +346,6 @@ const startAttendanceSession = async (user, data) => {
         connection.release();
 
     }
-
 };
 const getActiveSession = async (userId) => {
 
