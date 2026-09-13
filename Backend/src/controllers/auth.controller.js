@@ -319,11 +319,30 @@ const confirmPasswordReset = async (req, res) => {
     }
 
 };
+const getCurrentUser = async (req, res) => {
+    try {
+        return res.status(200).json({
+            authenticated: true,
+            user: {
+                id: req.user.userId,
+                role: req.user.role
+            }
+        });
+
+    } catch (error) {
+        console.error("Get current user error:", error);
+
+        return res.status(500).json({
+            message: "Internal server error"
+        });
+    }
+};
 
 module.exports = {
     loginUser,
     logoutUser,
     requestPasswordReset,
     verifyResetOTP,
-    confirmPasswordReset
+    confirmPasswordReset,
+    getCurrentUser
 };
