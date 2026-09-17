@@ -321,11 +321,39 @@ const confirmPasswordReset = async (req, res) => {
 };
 const getCurrentUser = async (req, res) => {
     try {
+        const [rows] = await pool.query(
+            `
+            SELECT 
+                u.user_id,
+                u.email,
+                u.role,
+                CASE
+                    WHEN u.role = 'STUDENT' THEN s.name
+                    WHEN u.role IN ('FACULTY', 'HOD') THEN f.name
+                END AS name
+            FROM users u
+            LEFT JOIN students s 
+                ON u.user_id = s.user_id
+            LEFT JOIN faculty f 
+                ON u.user_id = f.user_id
+            WHERE u.user_id = ?
+            `,
+            [req.user.userId]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
         return res.status(200).json({
             authenticated: true,
             user: {
-                id: req.user.userId,
-                role: req.user.role
+                id: rows[0].user_id,
+                name: rows[0].name,
+                email: rows[0].email,
+                role: rows[0].role
             }
         });
 
