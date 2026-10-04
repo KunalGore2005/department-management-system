@@ -1,17 +1,30 @@
+import { Outlet, useOutletContext } from "react-router-dom";
+
 import Navbar from "../components/navBar/navbar";
-import DashboardRouter from "../pages/dashboard/dashboardRouter";
 import Header from "../components/header/header";
 
-const DashboardLayout = ({ user }) => {
-    return (
-        <div className="min-h-screen flex">
+const DashboardLayout = () => {
 
+    const user = useOutletContext();
+
+    return (
+        <div className="h-screen flex overflow-hidden dark:bg-gray-800 dark:text-white">
+
+            {/* Navbar */}
             <Navbar user={user} />
 
-            <main className="flex-1">
-                <Header user={user}/>
-                <DashboardRouter user={user} />
-            </main>
+            {/* Right side */}
+            <div className="flex flex-col flex-1 min-w-0 min-h-0">
+
+                {/* Header */}
+                <Header user={user} />
+
+                {/* Scrollable main content */}
+                <main className="flex-1 min-h-0 overflow-y-auto">
+                    <Outlet context={user} />
+                </main>
+
+            </div>
 
         </div>
     );
