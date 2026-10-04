@@ -5,44 +5,49 @@ import ForgotPassword from "./pages/auth/forgotPassword";
 import ResetPassword from "./pages/auth/resetPassword";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
+import RoleRoute from "./routes/RoleRoute";
+
 import DashboardLayout from "./layout/dashboardLayout";
+import ModuleRouter from "./routes/ModuleRouter";
 
 function App() {
+
     return (
-            <Routes>
+        <Routes>
+            {/* PUBLIC ROUTES */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/forgotpassword" element={<ForgotPassword />} />
+            <Route path="/resetpassword" element={<ResetPassword />} />
 
-                {/* Public routes */}
+            <Route element={<ProtectedRoute />}>
 
-                <Route
-                    path="/login"
-                    element={<Login />}
-                />
+                <Route element={<DashboardLayout />}>
 
-                <Route
-                    path="/forgotpassword"
-                    element={<ForgotPassword />}
-                />
+                    <Route
+                        path="/"
+                        element={<ModuleRouter module="dashboard" />}
+                    />
 
-                <Route
-                    path="/resetpassword"
-                    element={<ResetPassword />}
-                />
+                    <Route
+                        path="/attendance"
+                        element={<ModuleRouter module="attendance" />}
+                    />
 
+                    <Route
+                        path="/marks"
+                        element={<ModuleRouter module="marks" />}
+                    />
 
-                {/* Protected dashboard */}
+                    <Route
+                        path="/notices"
+                        element={<ModuleRouter module="notices" />}
+                    />
 
-                <Route
-                    path="/"
-                    element={
-                        <ProtectedRoute>
-                            {(user) => (
-                                <DashboardLayout user={user} />
-                            )}
-                        </ProtectedRoute>
-                    }
-                />
+                </Route>
 
-            </Routes>
+            </Route>
+
+        </Routes>
     );
 }
 
