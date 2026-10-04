@@ -13,7 +13,7 @@ const nav = ({ symbol: Icon, name, path, expanded }) => {
           ${
               isActive
                   ? "bg-blue-900 text-white font-medium"
-                  : "hover:bg-blue-200"
+                  : "hover:bg-blue-200 dark:hover:bg-gray-700 dark:hover:text-white"
           }
           `
       }
