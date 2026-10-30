@@ -63,7 +63,7 @@ const hod = () => {
           </div>
 
           {/* Recent Notices */}
-          <div className="w-1/2 min-w-0 pt-4">
+          <div className="w-full min-w-0 pt-4 md:w-1/2">
             <h1 className='font-bold text-2xl'>Recent Notices</h1>
 
             <div className="mt-2 flex w-full min-w-0 flex-col gap-3">
