@@ -10,12 +10,6 @@ const Notice = (props) => {
         HIGH: 'bg-red-500'
     };
 
-    const priorityLabel = {
-        HIGH: 'High',
-        MEDIUM: 'Medium',
-        LOW: 'Low'
-    };
-
     return (
         <>
             {/* Notice Card */}
