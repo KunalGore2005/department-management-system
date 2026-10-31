@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import Stats from './components/stats'
-import Notice from './components/notices';
+import Notice from '../../components/notices/notices';
 
 const hod = () => {
   const [dashboardData, setDashboardData] = useState(null);
@@ -19,7 +19,7 @@ const hod = () => {
           }
         );
         const data = await response.json();
-        console.log("Dashboard Data:", data);
+        {/*console.log("Dashboard Data:", data);*/}
         if (!response.ok) {
           throw new Error(data.message || 'Failed to fetch dashboard data');
         }

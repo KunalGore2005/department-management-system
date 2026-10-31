@@ -11,7 +11,7 @@ import {
     Percent
 } from 'lucide-react';
 
-import Notice from './components/notices';
+import Notice from '../../components/notices/notices';
 
 const Student = () => {
     const [dashboardData, setDashboardData] = useState(null);

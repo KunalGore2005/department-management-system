@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import Stats from './components/stats';
-import Notice from './components/notices';
+import Notice from '../../components/notices/notices';
 
 const faculty = () => {
   const [dashboardData, setDashboardData] = useState(null);
