@@ -63,6 +63,7 @@ const getDashboard = async (user) => {
 
                 INNER JOIN sections sec
                     ON s.section_id = sec.section_id
+                    AND s.batch_id = sec.batch_id
 
                 INNER JOIN batches b
                     ON s.batch_id = b.batch_id
