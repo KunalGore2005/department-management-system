@@ -18,14 +18,15 @@ const assignCoordinator = async (sectionId, batchId, facultyId) => {
 
         const [section] = await connection.query(
             `SELECT section_id
-             FROM sections
-             WHERE section_id = ?`,
-            [sectionId]
+            FROM sections
+            WHERE section_id = ?
+            AND batch_id = ?`,
+            [sectionId, batchId]
         );
 
         if (section.length === 0) {
-            const error = new Error("Section not found.");
-            error.statusCode = 404;
+            const error = new Error("Section does not belong to the selected batch.");
+            error.statusCode = 400;
             throw error;
         }
 
