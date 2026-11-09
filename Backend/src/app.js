@@ -12,6 +12,7 @@ const profileRoutes = require("./routes/profile.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
 const sectionsRoutes = require("./routes/sections.routes");
 const batchesRoutes = require("./routes/batches.routes");
+const facultySubjectSectionRoutes = require("./routes/facultySubjectSection.routes");
 
 const { startCleanupJob } = require("./services/cleanup.service");
 
@@ -36,6 +37,7 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use("/api/sections", sectionsRoutes);
 app.use("/api/batches", batchesRoutes);
+app.use("/api/faculty-subject-sections",facultySubjectSectionRoutes);
 
 startCleanupJob();
 
