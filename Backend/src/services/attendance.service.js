@@ -150,8 +150,9 @@ const startAttendanceSession = async (user, data) => {
                 SELECT section_id
                 FROM sections
                 WHERE section_id = ?
+                AND batch_id = ?
                 `,
-                [item.sectionId]
+                [item.sectionId, item.batchId]
             );
 
             if (section.length === 0) {
@@ -436,6 +437,7 @@ const getActiveSession = async (userId) => {
         FROM attendance_session_sections ass
         INNER JOIN sections sec
             ON ass.section_id = sec.section_id
+            AND ass.batch_id = sec.batch_id
         INNER JOIN batches b
             ON ass.batch_id = b.batch_id
         WHERE ass.session_id = ?
@@ -593,6 +595,7 @@ const getSessionById = async (user, sessionId) => {
 
         INNER JOIN sections sec
             ON ass.section_id = sec.section_id
+            AND ass.batch_id = sec.batch_id
 
         INNER JOIN batches b
             ON ass.batch_id = b.batch_id
@@ -755,6 +758,7 @@ const getLiveAttendance = async (user, sessionId) => {
 
         INNER JOIN sections sec
             ON st.section_id = sec.section_id
+            AND st.batch_id = sec.batch_id
 
         INNER JOIN batches b
             ON st.batch_id = b.batch_id
@@ -1087,6 +1091,7 @@ const getAttendanceHistory = async (user) => {
 
             INNER JOIN sections sec
                 ON ass.section_id = sec.section_id
+                AND ass.batch_id = sec.batch_id
 
             INNER JOIN batches b
                 ON ass.batch_id = b.batch_id
@@ -1634,6 +1639,7 @@ const getAttendanceReport = async (user) => {
 
         INNER JOIN sections sec
             ON ass.section_id = sec.section_id
+            AND ass.batch_id = sec.batch_id
 
         INNER JOIN batches b
             ON ass.batch_id = b.batch_id
