@@ -248,6 +248,7 @@ const getAllCoordinators = async () => {
 
         INNER JOIN sections s
             ON ca.section_id = s.section_id
+            AND ca.batch_id = s.batch_id
 
         INNER JOIN batches b
             ON ca.batch_id = b.batch_id
@@ -306,6 +307,7 @@ const getCoordinatorByFaculty = async (facultyId) => {
 
         INNER JOIN sections s
             ON ca.section_id = s.section_id
+            AND ca.batch_id = s.batch_id
 
         INNER JOIN batches b
             ON ca.batch_id = b.batch_id
