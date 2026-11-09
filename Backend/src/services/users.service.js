@@ -20,11 +20,9 @@ const createUser = async (loggedInUser, userData) => {
             email,
             name,
             phone,
-
             enrollment_number,
             section_id,
             batch_id,
-
             designation,
             joining_date
         } = userData;
@@ -35,11 +33,9 @@ const createUser = async (loggedInUser, userData) => {
         // =============================
 
         if (!role || !email || !name) {
-
             throw new Error(
                 "Role, email and name are required."
             );
-
         }
 
 
@@ -48,9 +44,7 @@ const createUser = async (loggedInUser, userData) => {
         // =============================
 
         if (!["STUDENT", "FACULTY"].includes(role)) {
-
             throw new Error("Invalid role.");
-
         }
 
 
@@ -62,11 +56,9 @@ const createUser = async (loggedInUser, userData) => {
             loggedInUser.role === "FACULTY" &&
             role === "FACULTY"
         ) {
-
             throw new Error(
                 "Faculty cannot create another faculty."
             );
-
         }
 
 
@@ -81,11 +73,9 @@ const createUser = async (loggedInUser, userData) => {
                 !section_id ||
                 !batch_id
             ) {
-
                 throw new Error(
                     "Enrollment number, section and batch are required."
                 );
-
             }
 
         }
@@ -98,11 +88,9 @@ const createUser = async (loggedInUser, userData) => {
         if (role === "FACULTY") {
 
             if (!designation || !joining_date) {
-
                 throw new Error(
                     "Designation and joining date are required."
                 );
-
             }
 
         }
@@ -122,11 +110,9 @@ const createUser = async (loggedInUser, userData) => {
         );
 
         if (existingUser.length > 0) {
-
             throw new Error(
                 "Email already exists."
             );
-
         }
 
 
@@ -146,18 +132,16 @@ const createUser = async (loggedInUser, userData) => {
             );
 
             if (student.length > 0) {
-
                 throw new Error(
                     "Enrollment number already exists."
                 );
-
             }
 
         }
 
 
         // =============================
-        // Check Section
+        // Validate Section-Batch Relation
         // =============================
 
         if (role === "STUDENT") {
@@ -167,42 +151,15 @@ const createUser = async (loggedInUser, userData) => {
                 SELECT section_id
                 FROM sections
                 WHERE section_id = ?
+                AND batch_id = ?
                 `,
-                [section_id]
+                [section_id, batch_id]
             );
 
             if (section.length === 0) {
-
                 throw new Error(
-                    "Invalid section."
+                    "Invalid section or section does not belong to the selected batch."
                 );
-
-            }
-
-        }
-
-
-        // =============================
-        // Check Batch
-        // =============================
-
-        if (role === "STUDENT") {
-
-            const [batch] = await connection.query(
-                `
-                SELECT batch_id
-                FROM batches
-                WHERE batch_id = ?
-                `,
-                [batch_id]
-            );
-
-            if (batch.length === 0) {
-
-                throw new Error(
-                    "Invalid batch."
-                );
-
             }
 
         }
@@ -215,13 +172,9 @@ const createUser = async (loggedInUser, userData) => {
         let password = "";
 
         if (role === "STUDENT") {
-
             password = defaultPasswords.STUDENT;
-
         } else {
-
             password = defaultPasswords.FACULTY;
-
         }
 
 
@@ -624,15 +577,18 @@ const updateUser = async (userId, loggedInUser, userData) => {
 
 
         if (users.length === 0) {
-
             throw new Error(
                 "User not found."
             );
-
         }
 
 
         const user = users[0];
+
+
+        // =============================
+        // Permission Check
+        // =============================
 
         if (
             loggedInUser.role === "FACULTY" &&
@@ -642,6 +598,8 @@ const updateUser = async (userId, loggedInUser, userData) => {
                 "Faculty can only update student accounts."
             );
         }
+
+
         // =============================
         // Check Duplicate Email
         // =============================
@@ -664,11 +622,9 @@ const updateUser = async (userId, loggedInUser, userData) => {
 
 
             if (existingEmail.length > 0) {
-
                 throw new Error(
                     "Email already exists."
                 );
-
             }
 
         }
@@ -680,51 +636,52 @@ const updateUser = async (userId, loggedInUser, userData) => {
 
         if (user.role === "STUDENT") {
 
-            if (section_id) {
-
-                const [section] =
-                    await connection.query(
-                        `
-                        SELECT section_id
-                        FROM sections
-                        WHERE section_id = ?
-                        `,
-                        [section_id]
-                    );
+            const [studentRows] = await connection.query(
+                `
+                SELECT section_id, batch_id
+                FROM students
+                WHERE user_id = ?
+                FOR UPDATE
+                `,
+                [userId]
+            );
 
 
-                if (section.length === 0) {
-
-                    throw new Error(
-                        "Invalid section."
-                    );
-
-                }
-
+            if (studentRows.length === 0) {
+                throw new Error(
+                    "Student profile not found."
+                );
             }
 
 
-            if (batch_id) {
-
-                const [batch] =
-                    await connection.query(
-                        `
-                        SELECT batch_id
-                        FROM batches
-                        WHERE batch_id = ?
-                        `,
-                        [batch_id]
-                    );
+            const currentStudent = studentRows[0];
 
 
-                if (batch.length === 0) {
+            const updatedSectionId =
+                section_id ?? currentStudent.section_id;
 
-                    throw new Error(
-                        "Invalid batch."
-                    );
+            const updatedBatchId =
+                batch_id ?? currentStudent.batch_id;
 
-                }
 
+            const [section] = await connection.query(
+                `
+                SELECT section_id
+                FROM sections
+                WHERE section_id = ?
+                AND batch_id = ?
+                `,
+                [
+                    updatedSectionId,
+                    updatedBatchId
+                ]
+            );
+
+
+            if (section.length === 0) {
+                throw new Error(
+                    "Invalid section or section does not belong to the selected batch."
+                );
             }
 
         }
