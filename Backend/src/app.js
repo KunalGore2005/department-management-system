@@ -10,6 +10,8 @@ const marksRoutes = require("./routes/marks.routes");
 const noticesRoutes = require("./routes/notices.routes");
 const profileRoutes = require("./routes/profile.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
+const sectionsRoutes = require("./routes/sections.routes");
+const batchesRoutes = require("./routes/batches.routes");
 
 const { startCleanupJob } = require("./services/cleanup.service");
 
@@ -32,6 +34,9 @@ app.use('/api/marks', marksRoutes);
 app.use('/api/notices', noticesRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use("/api/sections", sectionsRoutes);
+app.use("/api/batches", batchesRoutes);
+
 startCleanupJob();
 
 module.exports = app;
