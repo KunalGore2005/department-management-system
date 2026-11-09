@@ -4,12 +4,15 @@ const getAllSections = async () => {
 
     const [sections] = await pool.query(
         `SELECT
-            section_id,
-            section_name,
-            intake_strength,
-            semester
-         FROM sections
-         ORDER BY semester ASC, section_name ASC`
+        s.section_id,
+        s.batch_id,
+        b.admission_year,
+        s.section_name,
+        s.intake_strength
+     FROM sections s
+     INNER JOIN batches b
+        ON s.batch_id = b.batch_id
+     ORDER BY b.admission_year DESC, s.section_name ASC`
     );
 
     return sections;
