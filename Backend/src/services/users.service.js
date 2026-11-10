@@ -315,6 +315,7 @@ const getAllUsers = async (query) => {
         let sql = `
             SELECT
                 u.user_id,
+                NULL AS faculty_id,
                 u.email,
                 u.role,
                 u.is_active,
@@ -337,6 +338,7 @@ const getAllUsers = async (query) => {
 
             SELECT
                 u.user_id,
+                f.faculty_id,
                 u.email,
                 u.role,
                 u.is_active,
