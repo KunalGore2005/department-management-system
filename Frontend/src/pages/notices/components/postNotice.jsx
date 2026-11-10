@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from "sonner";
 
 const PostNotice = ({ onSuccess }) => {
 
@@ -32,7 +33,11 @@ const PostNotice = ({ onSuccess }) => {
 
             const data = await response.json();
 
-            if (!response.ok) {
+            if(response.ok) {
+                console.log("Notice posted successfully:", data);
+                toast.success("Notice posted successfully!");
+            }
+            else {
                 throw new Error(data.message || 'Failed to post notice');
             }
 

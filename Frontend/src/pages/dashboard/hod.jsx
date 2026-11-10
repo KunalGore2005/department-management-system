@@ -63,25 +63,29 @@ const hod = () => {
           </div>
 
           {/* Recent Notices */}
-          <div className="w-full min-w-0 pt-4 md:w-1/2">
-            <h1 className='font-bold text-2xl'>Recent Notices</h1>
+            <section className="mb-4 w-full min-w-0 md:w-1/2">
+                <h2 className="mb-3 text-xl font-semibold text-gray-900 dark:text-white">
+                    Recent Notices
+                </h2>
 
-            <div className="mt-2 flex w-full min-w-0 flex-col gap-3">
-              {dashboardData?.recentNotices?.length > 0 && dashboardData?.recentNotices?.map((notice, index) => (
-                <Notice
-                  key={notice._id || index}
-                  title={notice.title}
-                  description={notice.description}
-                  priority={notice.priority}
-                  postedBy={notice.posted_by_name}
-                />
-              ))}
-              {
-                dashboardData?.recentNotices?.length == 0 && <div>No Notices</div>
-              }
-            </div>
-
-          </div>
+                <div className="flex w-full min-w-0 flex-col gap-3">
+                    {dashboardData?.recentNotices?.length > 0 ? (
+                        dashboardData.recentNotices.map((notice) => (
+                            <Notice
+                                key={notice.notice_id}
+                                title={notice.title}
+                                description={notice.description}
+                                priority={notice.priority}
+                                postedBy={notice.posted_by_name}
+                            />
+                        ))
+                    ) : (
+                        <p className="rounded-lg bg-gray-100 p-4 text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                            No recent notices available.
+                        </p>
+                    )}
+                </div>
+            </section>
 
         </div>
 
