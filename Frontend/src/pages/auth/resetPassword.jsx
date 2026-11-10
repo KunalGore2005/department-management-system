@@ -1,9 +1,9 @@
 import React, {useState} from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft} from 'lucide-react';
 
 const resetPassword = () => {
-
+    const navigate = useNavigate();
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -27,6 +27,10 @@ const resetPassword = () => {
         );
         const data = await response.json();
         console.log("Reset Password Response:", data);
+        if (response.ok) {
+            toast.success("Password reset successful!");
+            navigate("/");
+        }
 
       }catch(err){
         console.log("Error:",err);

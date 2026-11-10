@@ -1,7 +1,7 @@
-import React, { useActionState } from 'react'
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { toast } from "sonner";
 
 
 const login = () => {
@@ -27,6 +27,7 @@ const login = () => {
             const data= await response.json();
             console.log("Login Response:", data);
             if (response.ok) {
+                toast.success("Login successful!");
                 if (
                     data.is_first_login === true ||
                     data.is_first_login === 1
