@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Trash, X } from 'lucide-react';
+import { toast } from "sonner";
 
 const Notice = (props) => {
     const [expanded, setExpanded] = useState(false);
@@ -60,6 +61,7 @@ const Notice = (props) => {
             );
 
             if (response.ok) {
+                toast.success("Notice deleted successfully!");
                 setExpanded(false);
                 props.onDelete(id);
             }
