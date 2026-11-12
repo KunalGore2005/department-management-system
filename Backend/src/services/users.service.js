@@ -302,15 +302,10 @@ const createUser = async (loggedInUser, userData) => {
 // Get All Users
 // =====================================================
 
+
 const getAllUsers = async (query) => {
-
     try {
-
-        const {
-            role,
-            is_active
-        } = query;
-
+        const { role, is_active } = query;
 
         let sql = `
             SELECT
@@ -325,16 +320,15 @@ const getAllUsers = async (query) => {
                 s.enrollment_number,
                 s.section_id,
                 s.batch_id,
-                NULL AS designation
+                NULL AS designation,
+                NULL AS joining_date
 
             FROM users u
 
             JOIN students s
                 ON u.user_id = s.user_id
 
-
             UNION ALL
-
 
             SELECT
                 u.user_id,
@@ -345,10 +339,11 @@ const getAllUsers = async (query) => {
                 u.created_at,
                 f.name,
                 f.phone,
-                NULL,
-                NULL,
-                NULL,
-                f.designation
+                NULL AS enrollment_number,
+                NULL AS section_id,
+                NULL AS batch_id,
+                f.designation,
+                f.joining_date
 
             FROM users u
 
@@ -356,44 +351,23 @@ const getAllUsers = async (query) => {
                 ON u.user_id = f.user_id
         `;
 
-
         const conditions = [];
         const values = [];
 
-
-        // =============================
         // Filter by Role
-        // =============================
-
         if (role) {
-
             conditions.push("role = ?");
             values.push(role);
-
         }
 
-
-        // =============================
         // Filter by Active Status
-        // =============================
-
         if (is_active !== undefined) {
-
             conditions.push("is_active = ?");
-
-            values.push(
-                is_active === "true"
-            );
-
+            values.push(is_active === "true");
         }
 
-
-        // =============================
         // Apply Filters
-        // =============================
-
         if (conditions.length > 0) {
-
             sql = `
                 SELECT *
                 FROM (
@@ -402,9 +376,7 @@ const getAllUsers = async (query) => {
                 WHERE ${conditions.join(" AND ")}
                 ORDER BY role, name
             `;
-
         } else {
-
             sql = `
                 SELECT *
                 FROM (
@@ -412,25 +384,17 @@ const getAllUsers = async (query) => {
                 ) AS users
                 ORDER BY role, user_id
             `;
-
         }
 
-
-        const [users] = await pool.query(
-            sql,
-            values
-        );
-
+        const [users] = await pool.query(sql, values);
 
         return users;
 
     } catch (error) {
-
         throw error;
-
     }
-
 };
+
 
 
 // =====================================================
@@ -818,7 +782,7 @@ const updateUserStatus = async (
 
         const [users] = await pool.query(
             `
-            SELECT user_id
+            SELECT user_id, role
             FROM users
             WHERE user_id = ?
             `,
