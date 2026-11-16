@@ -3,7 +3,7 @@ const coordinatorsService = require("../services/coordinators.service");
 const assignCoordinator = async (req, res) => {
     try {
         const { sectionId, batchId } = req.params;
-        const { faculty_id: facultyId } = req.body;
+        const { facultyId } = req.params;
 
         const result = await coordinatorsService.assignCoordinator(
             sectionId,
