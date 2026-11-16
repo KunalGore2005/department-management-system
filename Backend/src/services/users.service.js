@@ -2,6 +2,48 @@ const pool = require("../config/db");
 const bcrypt = require("bcrypt");
 const defaultPasswords = require("../utils/defaultPasswords");
 
+const isCoordinatorForSection = async (
+    executor,
+    userId,
+    sectionId,
+    batchId
+) => {
+    const [rows] = await executor.query(
+        `
+        SELECT 1
+        FROM faculty f
+        INNER JOIN coordinator_assignments ca
+            ON ca.faculty_id = f.faculty_id
+        WHERE f.user_id = ?
+          AND ca.section_id = ?
+          AND ca.batch_id = ?
+        LIMIT 1
+        `,
+        [userId, sectionId, batchId]
+    );
+
+    return rows.length > 0;
+};
+
+const verifyCoordinatorAccess = async (
+    executor,
+    userId,
+    sectionId,
+    batchId
+) => {
+    const allowed = await isCoordinatorForSection(
+        executor,
+        userId,
+        sectionId,
+        batchId
+    );
+
+    if (!allowed) {
+        throw new Error(
+            "You are not authorized to manage students in this section."
+        );
+    }
+};
 
 // =====================================================
 // Create User
@@ -162,6 +204,18 @@ const createUser = async (loggedInUser, userData) => {
                 );
             }
 
+        }
+
+        if (
+            role === "STUDENT" &&
+            loggedInUser.role === "FACULTY"
+        ) {
+            await verifyCoordinatorAccess(
+                connection,
+                loggedInUser.userId,
+                section_id,
+                batch_id
+            );
         }
 
 
@@ -650,6 +704,24 @@ const updateUser = async (userId, loggedInUser, userData) => {
                 );
             }
 
+            if (loggedInUser.role === "FACULTY") {
+
+                // Verify access to the student's current section
+                await verifyCoordinatorAccess(
+                    connection,
+                    loggedInUser.userId,
+                    currentStudent.section_id,
+                    currentStudent.batch_id
+                );
+
+                // Verify access to the destination section
+                await verifyCoordinatorAccess(
+                    connection,
+                    loggedInUser.userId,
+                    updatedSectionId,
+                    updatedBatchId
+                );
+            }
         }
 
 
@@ -805,20 +877,43 @@ const updateUserStatus = async (
             );
         }
 
+        if (
+            loggedInUserRole === "FACULTY" &&
+            targetUser.role === "STUDENT"
+        ) {
+            const [studentRows] = await pool.query(
+                `
+        SELECT section_id, batch_id
+        FROM students
+        WHERE user_id = ?
+        `,
+                [userId]
+            );
+
+            if (studentRows.length === 0) {
+                throw new Error("Student profile not found.");
+            }
+
+            await verifyCoordinatorAccess(
+                pool,
+                loggedInUserId,
+                studentRows[0].section_id,
+                studentRows[0].batch_id
+            );
+        }
+
 
         // =============================
         // Prevent Self Deactivation
         // =============================
 
         if (
-            Number(userId) ===
-            Number(loggedInUserId)
+            !isActive &&
+            Number(userId) === Number(loggedInUserId)
         ) {
-
             throw new Error(
                 "You cannot deactivate your own account."
             );
-
         }
 
 
@@ -838,10 +933,9 @@ const updateUserStatus = async (
         return {
             success: true,
             message:
-                `User has been ${
-                    isActive
-                        ? "activated"
-                        : "deactivated"
+                `User has been ${isActive
+                    ? "activated"
+                    : "deactivated"
                 } successfully.`
         };
 
