@@ -409,9 +409,12 @@ const getAllUsers = async (query) => {
         const values = [];
 
         // Filter by Role
-        if (role) {
+        if (role === "faculty") {
+            conditions.push("role IN (?, ?)");
+            values.push("FACULTY", "HOD");
+        } else if (role) {
             conditions.push("role = ?");
-            values.push(role);
+            values.push(role.toUpperCase());
         }
 
         // Filter by Active Status
