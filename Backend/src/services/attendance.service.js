@@ -8,6 +8,8 @@ const startAttendanceSession = async (user, data) => {
     const {
         subjectId,
         sessionType,
+        attendanceCategory = "REGULAR",
+        attendanceMethod = "UNIQUE_ID",
         presentStrength,
         durationMinutes,
         sections
@@ -31,6 +33,14 @@ const startAttendanceSession = async (user, data) => {
             success: false,
             message: "Invalid session type."
         };
+    }
+
+    if (attendanceCategory !== "REGULAR") {
+        return { status: 400, success: false, message: "Invalid attendance category." };
+    }
+
+    if (attendanceMethod !== "UNIQUE_ID") {
+        return { status: 400, success: false, message: "Invalid attendance method." };
     }
 
     if (
@@ -272,12 +282,14 @@ const startAttendanceSession = async (user, data) => {
                 session_code,
                 present_strength,
                 session_type,
+                attendance_category,
+                attendance_method,
                 start_time,
                 end_time
             )
             VALUES
             (
-                ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?, ?,
                 NOW(),
                 DATE_ADD(NOW(), INTERVAL ? MINUTE)
             )
@@ -288,6 +300,8 @@ const startAttendanceSession = async (user, data) => {
                 sessionCode,
                 presentStrength,
                 sessionType,
+                attendanceCategory,
+                attendanceMethod,
                 durationMinutes
             ]
         );
@@ -1584,6 +1598,73 @@ const getStudentAttendance = async (userId) => {
         }
     };
 };
+
+const getStudentAttendanceHistory = async (userId) => {
+    const [students] = await db.query(
+        `SELECT student_id, section_id, batch_id FROM students WHERE user_id = ?`,
+        [userId]
+    );
+
+    if (students.length === 0) {
+        return { status: 404, success: false, message: "Student record not found." };
+    }
+
+    const student = students[0];
+    const [records] = await db.query(
+        `SELECT
+            a.session_id,
+            ats.submission_id,
+            s.subject_id,
+            s.subject_code,
+            s.subject_name,
+            f.name AS faculty_name,
+            a.start_time AS session_date,
+            a.start_time,
+            ats.submitted_at AS submission_time,
+            a.session_type,
+            a.attendance_category,
+            a.status AS session_status,
+            CASE
+                WHEN ats.submission_id IS NOT NULL THEN 'PRESENT'
+                WHEN a.status = 'ACTIVE' AND a.end_time > NOW() THEN 'PENDING'
+                ELSE 'ABSENT'
+            END AS attendance_status
+        FROM attendance_session_sections ass
+        INNER JOIN students st
+            ON st.student_id = ?
+            AND st.section_id = ass.section_id
+            AND st.batch_id = ass.batch_id
+        INNER JOIN attendance_sessions a ON a.session_id = ass.session_id
+        INNER JOIN subjects s ON s.subject_id = a.subject_id
+        INNER JOIN faculty f ON f.faculty_id = a.faculty_id
+        LEFT JOIN attendance_submissions ats
+            ON ats.session_id = a.session_id AND ats.student_id = ?
+        WHERE ass.section_id = ? AND ass.batch_id = ?
+        ORDER BY a.start_time DESC, a.session_id DESC`,
+        [student.student_id, student.student_id, student.section_id, student.batch_id]
+    );
+
+    return {
+        status: 200,
+        success: true,
+        message: "Student attendance history retrieved successfully.",
+        data: records.map((record) => ({
+            sessionId: record.session_id,
+            submissionId: record.submission_id,
+            subjectId: record.subject_id,
+            subjectCode: record.subject_code,
+            subjectName: record.subject_name,
+            facultyName: record.faculty_name,
+            sessionDate: record.session_date,
+            sessionStartTime: record.start_time,
+            submissionTime: record.submission_time,
+            sessionType: record.session_type,
+            attendanceCategory: record.attendance_category,
+            sessionStatus: record.session_status,
+            attendanceStatus: record.attendance_status
+        }))
+    };
+};
 const getAttendanceReport = async (user) => {
 
     const { userId, role } = user;
@@ -1752,5 +1833,6 @@ module.exports = {
     getAttendanceHistory,
     markAttendance,
     getStudentAttendance,
+    getStudentAttendanceHistory,
     getAttendanceReport
 };

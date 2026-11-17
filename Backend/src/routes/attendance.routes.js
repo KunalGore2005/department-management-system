@@ -35,6 +35,9 @@ router.post("/mark",verifyToken,authorizeRoles("STUDENT"),attendanceController.m
 // View own attendance summary
 router.get( "/student", verifyToken, authorizeRoles("STUDENT"), attendanceController.getStudentAttendance);
 
+// Complete student history, including pending and absent sessions.
+router.get("/student/history", verifyToken, authorizeRoles("STUDENT"), attendanceController.getStudentAttendanceHistory);
+
 // ======================= Faculty & HOD Routes =======================
 
 // Attendance reports

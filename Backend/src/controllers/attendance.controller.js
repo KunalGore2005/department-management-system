@@ -152,6 +152,22 @@ const getStudentAttendance = async (req, res) => {
         });
     }
 };
+
+const getStudentAttendanceHistory = async (req, res) => {
+    try {
+        const result = await attendanceService.getStudentAttendanceHistory(
+            req.user.userId
+        );
+        return res.status(result.status).json(result);
+    } catch (error) {
+        console.error("Get Student Attendance History Error:", error);
+        return res.status(500).json({
+            status: 500,
+            success: false,
+            message: "Internal Server Error"
+        });
+    }
+};
 const getAttendanceReport = async (req, res) => {
     try {
         const result = await attendanceService.getAttendanceReport(
@@ -180,5 +196,6 @@ module.exports = {
     getAttendanceHistory,
     markAttendance,
     getStudentAttendance,
+    getStudentAttendanceHistory,
     getAttendanceReport
 };
