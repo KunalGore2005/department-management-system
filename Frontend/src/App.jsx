@@ -65,6 +65,11 @@ function App() {
                             element={<ModuleRouter module="students" />}
                         />
 
+                        <Route
+                            path="/attendance"
+                            element={<ModuleRouter module="attendance" />}
+                        />
+
                     </Route>
 
                 </Route>
