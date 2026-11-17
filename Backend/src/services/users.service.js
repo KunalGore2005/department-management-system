@@ -409,7 +409,7 @@ const getAllUsers = async (query) => {
         const values = [];
 
         // Filter by Role
-        if (role === "faculty") {
+        if (role?.toUpperCase() === "FACULTY") {
             conditions.push("role IN (?, ?)");
             values.push("FACULTY", "HOD");
         } else if (role) {
