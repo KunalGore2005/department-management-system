@@ -22,7 +22,7 @@ const createExam = async (req, res) => {
 };
 const getExams = async (req, res) => {
     try {
-        const result = await marksService.getExams();
+        const result = await marksService.getExams(req.user);
 
         return res.status(result.statusCode).json({
             success: true,
@@ -41,7 +41,7 @@ const getExamById = async (req, res) => {
     try {
         const { examId } = req.params;
 
-        const result = await marksService.getExamById(examId);
+        const result = await marksService.getExamById(examId, req.user);
 
         return res.status(result.statusCode).json({
             success: true,
@@ -54,6 +54,30 @@ const getExamById = async (req, res) => {
             success: false,
             message: error.message
         });
+    }
+};
+const getSubjects = async (req, res) => {
+    try {
+        const result = await marksService.getSubjects(req.query.batchId, req.query.semester);
+        return res.status(result.statusCode).json({ success: true, message: result.message, data: result.data });
+    } catch (error) {
+        return res.status(error.statusCode || 500).json({ success: false, message: error.message });
+    }
+};
+const getAssignments = async (req, res) => {
+    try {
+        const result = await marksService.getAssignments(req.user);
+        return res.status(result.statusCode).json({ success: true, message: result.message, data: result.data });
+    } catch (error) {
+        return res.status(error.statusCode || 500).json({ success: false, message: error.message });
+    }
+};
+const getExamStudents = async (req, res) => {
+    try {
+        const result = await marksService.getExamStudents(req.user, req.params.examId, req.query.subjectId, req.query.sectionId);
+        return res.status(result.statusCode).json({ success: true, message: result.message, data: result.data });
+    } catch (error) {
+        return res.status(error.statusCode || 500).json({ success: false, message: error.message });
     }
 };
 const updateExam = async (req, res) => {
@@ -185,6 +209,9 @@ module.exports = {
     createExam,
     getExams,
     getExamById,
+    getSubjects,
+    getAssignments,
+    getExamStudents,
     updateExam,
     deleteExam,
     uploadMarks,

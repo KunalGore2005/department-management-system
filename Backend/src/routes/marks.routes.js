@@ -16,10 +16,13 @@ router.post( "/exams", verifyToken, authorizeRoles("HOD"), marksController.creat
 // Get All Exams
 // All authenticated users can view exams
 router.get( "/exams", verifyToken, authorizeRoles("STUDENT", "FACULTY", "HOD"), marksController.getExams );
+router.get( "/subjects", verifyToken, authorizeRoles("HOD"), marksController.getSubjects );
+router.get( "/assignments", verifyToken, authorizeRoles("FACULTY"), marksController.getAssignments );
 
 // Get Exam By ID
 // All authenticated users can view a specific exam
 router.get( "/exams/:examId", verifyToken, authorizeRoles("STUDENT", "FACULTY", "HOD"), marksController.getExamById );
+router.get( "/exams/:examId/students", verifyToken, authorizeRoles("FACULTY", "HOD"), marksController.getExamStudents );
 
 // Update Exam
 // Only HOD can update an exam
