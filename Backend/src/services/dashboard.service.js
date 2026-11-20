@@ -157,7 +157,7 @@ const getDashboard = async (user) => {
                     COUNT(*) AS total_marks,
                     COALESCE(
                         AVG(
-                            (em.marks_obtained / e.max_marks) * 100
+                            (em.marks_obtained / es.max_marks) * 100
                         ),
                         0
                     ) AS average_percentage
@@ -166,6 +166,10 @@ const getDashboard = async (user) => {
 
                 INNER JOIN exams e
                     ON em.exam_id = e.exam_id
+
+                INNER JOIN exam_subjects es
+                    ON em.exam_id = es.exam_id
+                    AND em.subject_id = es.subject_id
 
                 WHERE em.student_id = ?
                 `,
