@@ -14,6 +14,7 @@ const sectionsRoutes = require("./routes/sections.routes");
 const batchesRoutes = require("./routes/batches.routes");
 const facultySubjectSectionRoutes = require("./routes/facultySubjectSection.routes");
 const subjectAllocationRoutes = require("./routes/subjectAllocation.routes");
+const departmentSettingsRoutes = require("./routes/departmentSettings.routes");
 
 const { startCleanupJob } = require("./services/cleanup.service");
 
@@ -40,6 +41,7 @@ app.use("/api/sections", sectionsRoutes);
 app.use("/api/batches", batchesRoutes);
 app.use("/api/faculty-subject-sections",facultySubjectSectionRoutes);
 app.use("/api/subject-allocation", subjectAllocationRoutes);
+app.use("/api/department-settings", departmentSettingsRoutes);
 
 startCleanupJob();
 
