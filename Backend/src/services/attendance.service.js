@@ -1665,9 +1665,20 @@ const getStudentAttendanceHistory = async (userId) => {
         }))
     };
 };
-const getAttendanceReport = async (user) => {
+const getAttendanceReport = async (user, filters = {}) => {
 
     const { userId, role } = user;
+    const hasSectionFilter = filters.sectionId !== undefined || filters.batchId !== undefined;
+    const sectionId = Number(filters.sectionId);
+    const batchId = Number(filters.batchId);
+
+    if (hasSectionFilter && (!Number.isInteger(sectionId) || sectionId <= 0 || !Number.isInteger(batchId) || batchId <= 0)) {
+        return {
+            status: 400,
+            success: false,
+            message: "Valid sectionId and batchId are required together."
+        };
+    }
 
     const [faculty] = await db.query(
         `
@@ -1737,12 +1748,39 @@ const getAttendanceReport = async (user) => {
 
     const params = [];
 
-    if (role === "FACULTY") {
-        query += `
-            WHERE a.faculty_id = ?
-        `;
+    const conditions = [];
 
+    if (role === "FACULTY") {
+        conditions.push("a.faculty_id = ?");
         params.push(facultyId);
+
+        if (hasSectionFilter) {
+            const [assignments] = await db.query(
+                `SELECT assignment_id
+                 FROM coordinator_assignments
+                 WHERE faculty_id = ?
+                 AND section_id = ?
+                 AND batch_id = ?`,
+                [facultyId, sectionId, batchId]
+            );
+
+            if (assignments.length === 0) {
+                return {
+                    status: 403,
+                    success: false,
+                    message: "You are not assigned as coordinator for this section."
+                };
+            }
+        }
+    }
+
+    if (hasSectionFilter) {
+        conditions.push("ass.section_id = ?", "ass.batch_id = ?");
+        params.push(sectionId, batchId);
+    }
+
+    if (conditions.length) {
+        query += ` WHERE ${conditions.join(" AND ")}`;
     }
 
     query += `

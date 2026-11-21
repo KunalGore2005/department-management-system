@@ -171,7 +171,8 @@ const getStudentAttendanceHistory = async (req, res) => {
 const getAttendanceReport = async (req, res) => {
     try {
         const result = await attendanceService.getAttendanceReport(
-            req.user
+            req.user,
+            req.query
         );
 
         return res.status(result.status).json(result);

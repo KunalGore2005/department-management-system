@@ -183,7 +183,7 @@ const createAllocation = async (data) => {
             INNER JOIN users u
                 ON f.user_id = u.user_id
             WHERE f.faculty_id = ?
-            AND u.role = 'FACULTY'
+            AND (u.role = 'FACULTY' OR u.role = 'HOD')
             AND u.is_active = TRUE
             `,
             [facultyId]

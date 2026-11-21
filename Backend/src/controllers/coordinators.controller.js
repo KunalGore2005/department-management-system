@@ -67,6 +67,44 @@ const getAllCoordinators = async (req, res) => {
     }
 };
 
+const getMySections = async (req, res) => {
+    try {
+        const result = await coordinatorsService.getMySections(req.user.userId);
+
+        return res.status(result.statusCode).json({
+            success: true,
+            message: result.message,
+            data: result.data
+        });
+    } catch (error) {
+        return res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+const getMySectionStudents = async (req, res) => {
+    try {
+        const result = await coordinatorsService.getMySectionStudents(
+            req.user.userId,
+            req.params.sectionId,
+            req.params.batchId
+        );
+
+        return res.status(result.statusCode).json({
+            success: true,
+            message: result.message,
+            data: result.data
+        });
+    } catch (error) {
+        return res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
 const getCoordinatorByFaculty = async (req, res) => {
     try {
         const { faculty_id: facultyId } = req.body;
@@ -91,5 +129,7 @@ module.exports = {
     assignCoordinator,
     getCoordinatorBySection,
     getAllCoordinators,
-    getCoordinatorByFaculty
+    getCoordinatorByFaculty,
+    getMySections,
+    getMySectionStudents
 };

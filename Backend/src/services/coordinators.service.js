@@ -265,6 +265,79 @@ const getAllCoordinators = async () => {
     };
 };
 
+const getMySections = async (userId) => {
+    const [sections] = await pool.query(
+        `SELECT
+            ca.assignment_id,
+            ca.assigned_date,
+            s.section_id,
+            s.section_name,
+            s.intake_strength,
+            b.batch_id,
+            b.admission_year,
+            ds.current_semester
+         FROM faculty f
+         INNER JOIN coordinator_assignments ca
+            ON ca.faculty_id = f.faculty_id
+         INNER JOIN sections s
+            ON s.section_id = ca.section_id
+            AND s.batch_id = ca.batch_id
+         INNER JOIN batches b
+            ON b.batch_id = ca.batch_id
+         LEFT JOIN department_settings ds
+            ON ds.batch_id = b.batch_id
+         WHERE f.user_id = ?
+         ORDER BY b.admission_year DESC, s.section_name ASC`,
+        [userId]
+    );
+
+    return {
+        statusCode: 200,
+        message: "Assigned sections fetched successfully.",
+        data: sections
+    };
+};
+
+const getMySectionStudents = async (userId, sectionId, batchId) => {
+    if (![sectionId, batchId].every(value => Number.isInteger(Number(value)) && Number(value) > 0)) {
+        const error = new Error("Valid section ID and batch ID are required.");
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const [students] = await pool.query(
+        `SELECT
+            u.user_id,
+            u.email,
+            u.is_active,
+            s.student_id,
+            s.name,
+            s.phone,
+            s.enrollment_number,
+            s.section_id,
+            s.batch_id
+         FROM faculty f
+         INNER JOIN coordinator_assignments ca
+            ON ca.faculty_id = f.faculty_id
+            AND ca.section_id = ?
+            AND ca.batch_id = ?
+         INNER JOIN students s
+            ON s.section_id = ca.section_id
+            AND s.batch_id = ca.batch_id
+         INNER JOIN users u
+            ON u.user_id = s.user_id
+         WHERE f.user_id = ?
+         ORDER BY s.enrollment_number ASC`,
+        [sectionId, batchId, userId]
+    );
+
+    return {
+        statusCode: 200,
+        message: "Section students fetched successfully.",
+        data: students
+    };
+};
+
 const getCoordinatorByFaculty = async (facultyId) => {
 
     if (!facultyId) {
@@ -334,5 +407,7 @@ module.exports = {
     assignCoordinator,
     getCoordinatorBySection,
     getAllCoordinators,
-    getCoordinatorByFaculty
+    getCoordinatorByFaculty,
+    getMySections,
+    getMySectionStudents
 };
