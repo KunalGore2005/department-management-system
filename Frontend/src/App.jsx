@@ -4,6 +4,7 @@ import AppToaster from "./components/common/Toaster";
 import Login from "./pages/auth/login";
 import ForgotPassword from "./pages/auth/forgotPassword";
 import ResetPassword from "./pages/auth/resetPassword";
+import StudentSignup from "./pages/signup/index";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
 
@@ -20,6 +21,7 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/forgotpassword" element={<ForgotPassword />} />
                 <Route path="/resetpassword" element={<ResetPassword />} />
+                <Route path="/signup" element={<StudentSignup />} />
 
                 <Route element={<ProtectedRoute />}>
 
@@ -68,6 +70,11 @@ function App() {
                         <Route
                             path="/students"
                             element={<ModuleRouter module="students" />}
+                        />
+
+                        <Route
+                            path="/student-applications"
+                            element={<ModuleRouter module="signup" />}
                         />
 
                         <Route
