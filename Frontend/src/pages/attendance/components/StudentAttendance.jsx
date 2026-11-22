@@ -33,11 +33,229 @@ export default function StudentAttendance() {
         } finally { setSubmitting(false); }
     };
     const overall = summary?.overall;
-    return <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
-        <header className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-sm font-semibold uppercase tracking-wide text-blue-900">Student portal</p><h1 className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">Attendance</h1><p className="mt-1 text-sm text-slate-500">Mark attendance and keep track of your classes.</p></div><button onClick={refresh} className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50 dark:border-gray-600"><RefreshCw size={16}/> Refresh</button></header>
-        <nav className="flex gap-2 border-b border-slate-200 dark:border-gray-700">{[{ id: "mark", name: "Mark Attendance" }, { id: "history", name: "My History" }, { id: "summary", name: "Attendance Summary" }].map(item => <button key={item.id} onClick={() => setTab(item.id)} className={`border-b-2 px-3 py-3 text-sm font-semibold ${tab === item.id ? "border-blue-900 text-blue-900 dark:text-blue-300" : "border-transparent text-slate-500"}`}>{item.name}</button>)}</nav>
-        {loading && !summary ? <div className="py-14 text-center text-sm text-slate-500">Loading attendance…</div> : tab === "mark" ? <div className="mx-auto grid max-w-3xl gap-5 md:grid-cols-[1fr_0.8fr]"><form onSubmit={mark} className={`${box} space-y-4`}><div className="flex items-center gap-3"><span className="rounded-lg bg-blue-50 p-2 text-blue-900 dark:bg-blue-950 dark:text-blue-200"><Send size={20}/></span><div><h2 className="font-bold">Mark Attendance</h2><p className="text-sm text-slate-500">Use the code shared by your faculty.</p></div></div><div><label className="mb-1.5 block text-sm font-medium">Session code</label><input autoComplete="off" className="w-full rounded-lg border border-slate-300 px-3 py-2.5 font-mono uppercase tracking-widest outline-none focus:border-blue-900 dark:border-gray-600 dark:bg-gray-900" value={sessionCode} onChange={e => setSessionCode(e.target.value.toUpperCase())} placeholder="e.g. ABC123" maxLength={6} required/></div><div><label className="mb-1.5 block text-sm font-medium">Unique number</label><input type="number" min="1" className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-900 dark:border-gray-600 dark:bg-gray-900" value={uniqueId} onChange={e => setUniqueId(e.target.value)} placeholder="Enter your number" required/></div><button disabled={submitting} className="w-full rounded-lg bg-blue-950 px-4 py-2.5 font-semibold text-white hover:bg-blue-900 disabled:opacity-60">{submitting ? "Submitting…" : "Submit attendance"}</button></form><div className={`${box} flex flex-col justify-center`}><h3 className="font-semibold">Before you submit</h3><ul className="mt-3 space-y-2 text-sm text-slate-600 dark:text-gray-300"><li>• Check the session code carefully.</li><li>• Use the unique number assigned for this session.</li><li>• You can submit only once per session.</li></ul></div></div> : tab === "history" ? <section className={box}><div className="flex flex-wrap items-start justify-between gap-3"><div><div className="flex items-center gap-2"><History size={19} className="text-blue-900"/><h2 className="text-xl font-bold">My History</h2></div><p className="mt-1 text-sm text-slate-500">A record of attendance for your section and batch.</p></div><button onClick={refresh} className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-gray-600"><RefreshCw size={15}/> Refresh</button></div><div className="mt-5 overflow-x-auto"><table className="w-full min-w-[720px] text-left text-sm"><thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:bg-gray-900"><tr>{["Date", "Subject", "Faculty", "Time logged", "Status"].map(name => <th key={name} className="px-4 py-3">{name}</th>)}</tr></thead><tbody>{history.length ? history.map(row => <tr key={row.sessionId} className="border-b border-slate-100 last:border-0 dark:border-gray-700"><td className="px-4 py-4"><span className="inline-flex items-center gap-2"><CalendarDays size={15} className="text-slate-400"/>{stamp(row.sessionDate || row.sessionStartTime)}</span></td><td className="px-4 py-4"><span className="font-semibold">{row.subjectCode}</span><span className="block text-xs text-slate-500">{row.subjectName}</span></td><td className="px-4 py-4">{row.facultyName}</td><td className="px-4 py-4">{row.attendanceStatus === "PRESENT" ? stamp(row.submissionTime) : "—"}</td><td className="px-4 py-4"><Status status={row.attendanceStatus}/></td></tr>) : <tr><td colSpan="5" className="px-4 py-14 text-center text-slate-500">No sessions in your attendance history yet.</td></tr>}</tbody></table></div></section> : <div className="space-y-5">{overall && <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><SummaryCard title="Overall attendance" value={`${overall.attendancePercentage}%`}/><SummaryCard title="Total lectures" value={overall.totalLectures}/><SummaryCard title="Attended" value={overall.attendedLectures} tone="green"/><SummaryCard title="Absent" value={overall.absentLectures} tone="red"/></div>}<section className={box}><h2 className="mb-4 text-lg font-bold">Subject-wise attendance</h2>{summary?.subjects?.length ? <div className="overflow-x-auto"><table className="w-full min-w-[600px] text-left text-sm"><thead className="bg-slate-50 text-xs uppercase text-slate-500 dark:bg-gray-900"><tr>{["Subject", "Attended", "Absent", "Total lectures", "Attendance"].map(item => <th key={item} className="px-4 py-3">{item}</th>)}</tr></thead><tbody>{summary.subjects.map(subject => <tr key={subject.subjectId} className="border-b border-slate-100 dark:border-gray-700"><td className="px-4 py-3"><strong>{subject.subjectCode}</strong><span className="ml-2 text-slate-500">{subject.subjectName}</span></td><td className="px-4 py-3">{subject.attendedLectures}</td><td className="px-4 py-3">{subject.absentLectures}</td><td className="px-4 py-3">{subject.totalLectures}</td><td className="px-4 py-3 font-semibold">{subject.attendancePercentage}%</td></tr>)}</tbody></table></div> : <p className="py-10 text-center text-sm text-slate-500">No regular attendance summary is available.</p>}</section></div>}
-    </div>;
+    return (
+        <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
+            <header className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <p className="text-sm font-semibold uppercase tracking-wide text-blue-900">
+                        Student portal
+                    </p>
+                    <h1 className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
+                        Attendance
+                    </h1>
+                    <p className="mt-1 text-sm text-slate-500">
+                        Mark attendance and keep track of your classes.
+                    </p>
+                </div>
+                <button
+                    onClick={refresh}
+                    className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50 dark:border-gray-600"
+                >
+                    <RefreshCw size={16} />
+                    Refresh
+                </button>
+            </header>
+            <nav className="flex gap-2 border-b border-slate-200 dark:border-gray-700">
+                {[
+                    { id: "mark", name: "Mark Attendance" },
+                    { id: "history", name: "My History" },
+                    { id: "summary", name: "Attendance Summary" }
+                ].map(item => (
+                    <button
+                        key={item.id}
+                        onClick={() => setTab(item.id)}
+                        className={`border-b-2 px-3 py-3 text-sm font-semibold ${
+                            tab === item.id
+                                ? "border-blue-900 text-blue-900 dark:text-blue-300"
+                                : "border-transparent text-slate-500"
+                        }`}
+                    >
+                        {item.name}
+                    </button>
+                ))}
+            </nav>
+            {loading && !summary ? (
+                <div className="py-14 text-center text-sm text-slate-500">Loading attendance…</div>
+            ) : tab === "mark" ? (
+                <div className="mx-auto grid max-w-3xl gap-5 md:grid-cols-[1fr_0.8fr]">
+                    <form onSubmit={mark} className={`${box} space-y-4`}>
+                        <div className="flex items-center gap-3">
+                            <span className="rounded-lg bg-blue-50 p-2 text-blue-900 dark:bg-blue-950 dark:text-blue-200">
+                                <Send size={20} />
+                            </span>
+                            <div>
+                                <h2 className="font-bold">Mark Attendance</h2>
+                                <p className="text-sm text-slate-500">
+                                    Use the code shared by your faculty.
+                                </p>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="mb-1.5 block text-sm font-medium">Session code</label>
+                            <input
+                                autoComplete="off"
+                                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 font-mono uppercase tracking-widest outline-none focus:border-blue-900 dark:border-gray-600 dark:bg-gray-900"
+                                value={sessionCode}
+                                onChange={e => setSessionCode(e.target.value.toUpperCase())}
+                                placeholder="e.g. ABC123"
+                                maxLength={6}
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="mb-1.5 block text-sm font-medium">Unique number</label>
+                            <input
+                                type="number"
+                                min="1"
+                                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-900 dark:border-gray-600 dark:bg-gray-900"
+                                value={uniqueId}
+                                onChange={e => setUniqueId(e.target.value)}
+                                placeholder="Enter your number"
+                                required
+                            />
+                        </div>
+                        <button
+                            disabled={submitting}
+                            className="w-full rounded-lg bg-blue-950 px-4 py-2.5 font-semibold text-white hover:bg-blue-900 disabled:opacity-60"
+                        >
+                            {submitting ? "Submitting…" : "Submit attendance"}
+                        </button>
+                    </form>
+                    <div className={`${box} flex flex-col justify-center`}>
+                        <h3 className="font-semibold">Before you submit</h3>
+                        <ul className="mt-3 space-y-2 text-sm text-slate-600 dark:text-gray-300">
+                            <li>• Check the session code carefully.</li>
+                            <li>• Use the unique number assigned for this session.</li>
+                            <li>• You can submit only once per session.</li>
+                        </ul>
+                    </div>
+                </div>
+            ) : tab === "history" ? (
+                <section className={box}>
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <History size={19} className="text-blue-900" />
+                                <h2 className="text-xl font-bold">My History</h2>
+                            </div>
+                            <p className="mt-1 text-sm text-slate-500">
+                                A record of attendance for your section and batch.
+                            </p>
+                        </div>
+                        <button
+                            onClick={refresh}
+                            className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-gray-600"
+                        >
+                            <RefreshCw size={15} />
+                            Refresh
+                        </button>
+                    </div>
+                    <div className="mt-5 overflow-x-auto">
+                        <table className="w-full min-w-180 text-left text-sm">
+                            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:bg-gray-900">
+                                <tr>
+                                    {["Date", "Subject", "Faculty", "Time logged", "Status"].map(name => (
+                                        <th key={name} className="px-4 py-3">{name}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {history.length ? (
+                                    history.map(row => (
+                                        <tr
+                                            key={row.sessionId}
+                                            className="border-b border-slate-100 last:border-0 dark:border-gray-700"
+                                        >
+                                            <td className="px-4 py-4">
+                                                <span className="inline-flex items-center gap-2">
+                                                    <CalendarDays size={15} className="text-slate-400" />
+                                                    {stamp(row.sessionDate || row.sessionStartTime)}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-4">
+                                                <span className="font-semibold">{row.subjectCode}</span>
+                                                <span className="block text-xs text-slate-500">{row.subjectName}</span>
+                                            </td>
+                                            <td className="px-4 py-4">{row.facultyName}</td>
+                                            <td className="px-4 py-4">
+                                                {row.attendanceStatus === "PRESENT"
+                                                    ? stamp(row.submissionTime)
+                                                    : "—"}
+                                            </td>
+                                            <td className="px-4 py-4">
+                                                <Status status={row.attendanceStatus} />
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="5" className="px-4 py-14 text-center text-slate-500">
+                                            No sessions in your attendance history yet.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            ) : (
+                <div className="space-y-5">
+                    {overall && (
+                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                            <SummaryCard
+                                title="Overall attendance"
+                                value={`${overall.attendancePercentage}%`}
+                            />
+                            <SummaryCard title="Total lectures" value={overall.totalLectures} />
+                            <SummaryCard title="Attended" value={overall.attendedLectures} tone="green" />
+                            <SummaryCard title="Absent" value={overall.absentLectures} tone="red" />
+                        </div>
+                    )}
+                    <section className={box}>
+                        <h2 className="mb-4 text-lg font-bold">Subject-wise attendance</h2>
+                        {summary?.subjects?.length ? (
+                            <div className="overflow-x-auto">
+                                <table className="w-full min-w-150 text-left text-sm">
+                                    <thead className="bg-slate-50 text-xs uppercase text-slate-500 dark:bg-gray-900">
+                                        <tr>
+                                            {["Subject", "Attended", "Absent", "Total lectures", "Attendance"].map(
+                                                item => <th key={item} className="px-4 py-3">{item}</th>
+                                            )}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {summary.subjects.map(subject => (
+                                            <tr
+                                                key={subject.subjectId}
+                                                className="border-b border-slate-100 dark:border-gray-700"
+                                            >
+                                                <td className="px-4 py-3">
+                                                    <strong>{subject.subjectCode}</strong>
+                                                    <span className="ml-2 text-slate-500">
+                                                        {subject.subjectName}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3">{subject.attendedLectures}</td>
+                                                <td className="px-4 py-3">{subject.absentLectures}</td>
+                                                <td className="px-4 py-3">{subject.totalLectures}</td>
+                                                <td className="px-4 py-3 font-semibold">
+                                                    {subject.attendancePercentage}%
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <p className="py-10 text-center text-sm text-slate-500">
+                                No regular attendance summary is available.
+                            </p>
+                        )}
+                    </section>
+                </div>
+            )}
+        </div>
+    );
 }
 
 function Status({ status }) { const styles = { PRESENT: "bg-green-50 text-green-700", ABSENT: "bg-red-50 text-red-700", PENDING: "bg-amber-50 text-amber-700" }; const Icon = status === "PRESENT" ? CheckCircle2 : status === "ABSENT" ? XCircle : Clock3; return <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${styles[status] || styles.PENDING}`}><Icon size={14}/>{status}</span>; }
