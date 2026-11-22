@@ -1,11 +1,39 @@
-import React, {useState} from 'react'
+import React, { useState } from 'react'
 import Nav from './nav'
 import { ChevronLeft, ChevronRight, LogOut } from "lucide-react";
 import { studentNavigation, hodNavigation, facultyNavigation } from '../../config/navigation'
+import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 
 const navbar = ({user}) => {
 
   const [expanded, setExpanded] = useState(true);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || "Unable to log out. Please try again.");
+      }
+
+      toast.success("Logged out successfully.");
+      navigate("/login", { replace: true });
+    } catch (error) {
+      toast.error(error.message || "Unable to log out. Please try again.");
+    } finally {
+      setLoggingOut(false);
+    }
+  };
 
   let navigation = [];
   const role = user?.role?.toUpperCase();
@@ -61,9 +89,9 @@ const navbar = ({user}) => {
                     className="p-2 rounded"
                 >
                   {expanded ? (
-                  <ChevronLeft size={20} />
+                  <ChevronLeft size={20} className='cursor-pointer'/>
                   ) : (
-                  <ChevronRight size={20} />
+                  <ChevronRight size={20} className='cursor-pointer'/>
                   )}
                 </button>
           </div>
@@ -81,16 +109,21 @@ const navbar = ({user}) => {
 
         {/* LogOut */}
         <button
+                type="button"
+                onClick={handleLogout}
+                disabled={loggingOut}
+                aria-label={loggingOut ? "Logging out" : "Logout"}
                 className={`
                   flex items-center rounded py-2 px-4
                   hover:bg-red-800 hover:text-white hover:font-medium
+                  disabled:cursor-wait disabled:opacity-60
                   ${expanded ? "gap-3" : "justify-center"}
                 `}
               >
                 <LogOut size={18} className="shrink-0" />
 
                 {expanded && (
-                  <span>Logout</span>
+                  <span>{loggingOut ? "Logging out…" : "Logout"}</span>
                 )}
         </button>
 
