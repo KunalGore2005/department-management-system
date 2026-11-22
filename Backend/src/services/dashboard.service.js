@@ -368,22 +368,23 @@ const getDashboard = async (user) => {
             const [recentNotices] = await pool.query(
                 `
                 SELECT
-                    notice_id,
-                    title,
-                    description,
-                    priority,
-                    created_at,
-                    updated_at
+                    n.notice_id,
+                    n.title,
+                    n.description,
+                    n.priority,
+                    n.created_at,
+                    n.updated_at,
+                    f.name AS posted_by_name
 
-                FROM notices
+                FROM notices n
 
-                WHERE posted_by = ?
+                INNER JOIN faculty f
+                    ON n.posted_by = f.faculty_id
 
-                ORDER BY created_at DESC
+                ORDER BY n.created_at DESC
 
                 LIMIT 5
-                `,
-                [faculty.faculty_id]
+                `
             );
 
 
