@@ -46,7 +46,7 @@ const faculty = () => {
 
         <div>
           <h1 className='text-3xl font-bold'>Faculty</h1>
-          <p className='font-medium '>Manage Your </p>
+          <p className='font-medium '>Manage Your Students</p>
         </div>
 
         <div className='w-full min-w-0 overflow-x-hidden'>
