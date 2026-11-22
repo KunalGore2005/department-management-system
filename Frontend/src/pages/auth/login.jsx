@@ -97,6 +97,9 @@ const login = () => {
             </button>
 
             </form>
+            <p className="mt-4 text-sm text-gray-600">
+                New student? <Link to="/signup" className="font-semibold text-blue-800 hover:underline">Apply for portal access</Link>
+            </p>
         </div>
         
     </div>

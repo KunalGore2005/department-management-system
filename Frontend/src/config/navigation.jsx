@@ -1,4 +1,4 @@
-import { LayoutDashboard, Clock,Settings, ClipboardList, BookOpenCheck, School, GraduationCap, UserGroup,UserStar  } from 'lucide-react';
+import { LayoutDashboard, Clock,Settings, ClipboardList, BookOpenCheck, School, GraduationCap, UserGroup,UserStar, UserPlus  } from 'lucide-react';
 
 export const studentNavigation = [
     { name: "Dashboard", symbol: LayoutDashboard, path: "/" },
@@ -11,6 +11,7 @@ export const studentNavigation = [
 export const hodNavigation = [
     { name: "Dashboard", symbol: LayoutDashboard, path: "/" },
     { name: "Students", symbol: GraduationCap, path: "/students" },
+    { name: "Student Applications", symbol: UserPlus, path: "/student-applications" },
     { name: "Faculties", symbol: UserStar, path: "/faculties" },
     { name: "Coordinators", symbol: UserGroup, path: "/assign-coordinators" },
     { name: "Subject Allocation", symbol: BookOpenCheck, path: "/subject-allocation" },
