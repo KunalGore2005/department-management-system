@@ -41,6 +41,11 @@ function App() {
                         />
 
                         <Route
+                            path="/exams"
+                            element={<ModuleRouter module="exams" />}
+                        />
+
+                        <Route
                             path="/notices"
                             element={<ModuleRouter module="notices" />}
                         />
@@ -66,8 +71,18 @@ function App() {
                         />
 
                         <Route
+                            path="/section"
+                            element={<ModuleRouter module="section" />}
+                        />
+
+                        <Route
                             path="/attendance"
                             element={<ModuleRouter module="attendance" />}
+                        />
+
+                        <Route
+                            path="/settings"
+                            element={<ModuleRouter module="settings" />}
                         />
 
                     </Route>
